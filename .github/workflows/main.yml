@@ -8,17 +8,19 @@ on:
 
 jobs:
   build:
-    name: Build debug apk
+    name: Build APKs
     runs-on: ubuntu-latest
+
     steps:
       - name: Cancel previous runs
         uses: styfle/cancel-workflow-action@0.5.0
         with:
           access_token: ${{ github.token }}
 
-      - uses: actions/checkout@v4
-    
-      - name: set up JDK 17
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
           java-version: '17'
@@ -28,17 +30,30 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      - name: Build debug apk
-        uses: eskatos/gradle-command-action@v1
+      - name: Cache Gradle files
+        uses: actions/cache@v4
         with:
-          arguments: assembleDebug
-          distributions-cache-enabled: true
-          dependencies-cache-enabled: true
-          configuration-cache-enabled: true
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
 
-      - name: Upload debug apk
+      - name: Build debug APK
+        run: ./gradlew assembleDebug
+
+      - name: Build release APK
+        run: ./gradlew assembleRelease
+
+      - name: Upload debug APK
         uses: actions/upload-artifact@v4
-        if: ${{ !github.head_ref }}
         with:
           name: apk-debug-nader
-          path: app/build/outputs/apk/debug
+          path: app/build/outputs/apk/debug/*.apk
+
+      - name: Upload release APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: apk-release-nader
+          path: app/build/outputs/apk/release/*.apk
