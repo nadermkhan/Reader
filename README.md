@@ -1,2 +1,2 @@
 # Reader
-Reads txt files in a beautiful way
+Reads txt files in a beautiful way in Android
